@@ -1,15 +1,87 @@
-# LoRaWAN node for environment sensing
+----
+----
+# _WORK IN PROGRESS_
+----
+----
 
-This app uses the RAK1906 to measure temperature, humidity, barometric pressure and air quality (as gas resistance) and transmit the data over LoRaWAN.
+# RAK4631-Kit-4-RAK1906
+This is an example code for WisBlock Environment sensor ([WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor)) with RAK1906 environment sensor
 
-This example has BLE enabled, so you can setup the LoRaWAN parameters over BLE. 
-Debug output is enabled as well. If you want to measure current consumption, you should disable the debug output in platformio.ini by setting `MY_DEBUG` to 0:
-```ini
+It is based on my low power event driven example [RAK4631-Quick-Start-Examples](https://github.com/beegee-tokyo/RAK4631-Quick-Start-Examples)
+
+----
+
+# Hardware used
+- [RAK4631](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview/) WisBlock Core module
+- [RAK5005-O](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5005-O/Overview/) WisBlock Base board
+- [RAK1906](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/) WisBlock Sensor environment module
+
+----
+
+# Software used
+- [PlatformIO](https://platformio.org/install)
+- [Adafruit nRF52 BSP](https://docs.platformio.org/en/latest/boards/nordicnrf52/adafruit_feather_nrf52832.html)
+- [Patch to use RAK4631 with PlatformIO](https://github.com/RAKWireless/WisBlock/blob/master/PlatformIO/RAK4630/README.md)
+- [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)
+- [Adafruit BME680 Library](https://platformio.org/lib/show/1922/Adafruit%20BME680%20Library)
+
+----
+
+
+# Setting up LoRaWAN credentials
+The LoRaWAN credentials are defined in [main.h](./include/main.h). But this code supports 2 other methods to change the LoRaWAN credentials on the fly:
+
+## 1) Setup over BLE
+Using the [My nRF52 Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.my_nrf52_tb) you can connect to the WisBlock over BLE and setup all LoRaWAN parameters like
+- Region
+- OTAA/ABP
+- Confirmed/Unconfirmed message
+- ...
+
+More details can be found in the [My nRF52 Toolbox repo](https://github.com/beegee-tokyo/My-nRF52-Toolbox/blob/master/README.md)
+
+## 2) Setup over USB port
+Using the AT command interface the WisBlock can be setup over the USB port.
+
+A detailed manual for the AT commands are in [AT-Commands.md](./AT-Commands.md)
+
+----
+
+# Debug options 
+Debug output can be controlled by defines in the **`platformio.ini`**    
+_**LIB_DEBUG**_ controls debug output of the SX126x-Arduino LoRaWAN library
+ - 0 -> No debug outpuy
+ - 1 -> Library debug output (not recommended, can have influence on timing)    
+
+_**MY_DEBUG**_ controls debug output of the application itself
+ - 0 -> No debug outpuy
+ - 1 -> Application debug output
+
+_**CFG_DEBUG**_ controls the debug output of the nRF52 BSP. It is recommended to keep it off
+
+## Example for no debug output and maximum power savings:
+
+```
+[env:wiscore_rak4631]
+platform = nordicnrf52@8.1.0
+board = wiscore_rak4631
+framework = arduino
 build_flags = 
-	-DMY_DEBUG=0
+    ; -DCFG_DEBUG=2
+	-DSW_VERSION_1=1 ; major version increase on API change / not backwards compatible
+	-DSW_VERSION_2=0 ; minor version increase on API change / backward compatible
+	-DSW_VERSION_3=0 ; patch version increase on bugfix, no affect on API
+	-DLIB_DEBUG=0    ; 0 Disable LoRaWAN debug output
+	-DMY_DEBUG=0     ; 0 Disable application debug output
+	-DNO_BLE_LED=1   ; 1 Disable blue LED as BLE notificator
+lib_deps = 
+	beegee-tokyo/SX126x-Arduino
+	adafruit/Adafruit BME680 Library
+extra_scripts = pre:rename.py
 ```
 
-# 
+----
+
 # Payload decoder for Chirpstack (and maybe TTN, but not tested):    
 ```js
 function Decode(fPort, bytes, variables) {
