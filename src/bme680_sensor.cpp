@@ -9,9 +9,9 @@
  * 
  */
 
-#include "main.h"
+#include <app.h>
 
-extern uint8_t collected_data[];
+env_data_s g_env_data;
 
 /** BME680 */
 Adafruit_BME680 bme;
@@ -38,41 +38,33 @@ bool init_bme680(void)
 	return true;
 }
 
-uint8_t bme680_get()
+void bme680_get()
 {
 	bme.performReading();
 
-	double temp = bme.temperature;
-	double pres = bme.pressure / 100.0;
-	double hum = bme.humidity;
-	uint32_t gas = bme.gas_resistance;
-	uint16_t batt = 0;
+	int16_t temp_int = (int16_t)(bme.temperature * 10.0);
+	uint16_t humid_int = (uint16_t)(bme.humidity * 2);
+	uint16_t press_int = (uint16_t)(bme.pressure / 10);
+	uint16_t gasres_int = (uint16_t)(bme.gas_resistance / 10);
+	uint32_t batt = 0;
+	batt_s batt_level;
+
 	for (int i = 0; i < 10; i++)
 	{
 		batt += (uint16_t)(read_batt() / 10);
 	}
-	batt = batt / 10;
+	batt_level.batt16 = batt / 10;
+	g_env_data.batt_1 = batt_level.batt8[1];
+	g_env_data.batt_2 = batt_level.batt8[0];
 
-	uint8_t i = 0;
-	uint16_t t = temp * 100;
-	uint16_t h = hum * 100;
-	uint32_t pre = pres * 100;
+	g_env_data.humid_1 = (uint8_t)(humid_int);
+	g_env_data.temp_1 = (uint8_t)(temp_int >> 8);
+	g_env_data.temp_2 = (uint8_t)(temp_int);
+	g_env_data.press_1 = (uint8_t)(press_int >> 8);
+	g_env_data.press_2 = (uint8_t)(press_int);
+	g_env_data.gas_1 = (uint8_t)(gasres_int >> 8);
+	g_env_data.gas_2 = (uint8_t)(gasres_int);
 
-	collected_data[i++] = 0x01;
-	collected_data[i++] = (uint8_t)(t >> 8);
-	collected_data[i++] = (uint8_t)t;
-	collected_data[i++] = (uint8_t)(h >> 8);
-	collected_data[i++] = (uint8_t)h;
-	collected_data[i++] = (uint8_t)((pre & 0xFF000000) >> 24);
-	collected_data[i++] = (uint8_t)((pre & 0x00FF0000) >> 16);
-	collected_data[i++] = (uint8_t)((pre & 0x0000FF00) >> 8);
-	collected_data[i++] = (uint8_t)(pre & 0x000000FF);
-	collected_data[i++] = (uint8_t)((gas & 0xFF000000) >> 24);
-	collected_data[i++] = (uint8_t)((gas & 0x00FF0000) >> 16);
-	collected_data[i++] = (uint8_t)((gas & 0x0000FF00) >> 8);
-	collected_data[i++] = (uint8_t)(gas & 0x000000FF);
-	collected_data[i++] = (uint8_t)(batt >> 8);
-	collected_data[i++] = (uint8_t)batt;
-
-	return i;
+	MYLOG("BME", "RH= %.2f T= %.2f", (float)(humid_int / 2.0), (float)(temp_int / 10.0));
+	MYLOG("BME", "P= %d R= %d", press_int * 10, gasres_int * 10);
 }
