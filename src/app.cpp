@@ -141,6 +141,49 @@ void ble_data_handler(void)
  */
 void lora_data_handler(void)
 {
+	// LoRa TX finished handling
+	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
+	{
+		/**************************************************************/
+		/**************************************************************/
+		/// \todo LoRaWAN TX cycle (including RX1 and RX2 window) finished
+		/// \todo can be used to enable next sending
+		/// \todo if confirmed packet sending, g_rx_fin_result holds the result of the transmission
+		/**************************************************************/
+		/**************************************************************/
+		g_task_event_type &= N_LORA_TX_FIN;
+
+		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+
+		if (!g_rx_fin_result)
+		{
+			// Increase fail send counter
+			send_fail++;
+
+			if (send_fail == 10)
+			{
+				// Too many failed sendings, reset node and try to rejoin
+				delay(100);
+				sd_nvic_SystemReset();
+			}
+		}
+	}
+	// LoRa Join finished handling
+	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+	{
+		g_task_event_type &= N_LORA_JOIN_FIN;
+		if (g_join_result)
+		{
+			MYLOG("APP", "Successfully joined network");
+		}
+		else
+		{
+			MYLOG("APP", "Join network failed");
+			/// \todo here join could be restarted.
+			lmh_join();
+		}
+	}
+
 	// LoRa data handling
 	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
 	{
@@ -175,50 +218,6 @@ void lora_data_handler(void)
 				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
 			}
 			g_ble_uart.println("");
-		}
-	}
-
-	// LoRa TX finished handling
-	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
-	{
-		/**************************************************************/
-		/**************************************************************/
-		/// \todo LoRaWAN TX cycle (including RX1 and RX2 window) finished
-		/// \todo can be used to enable next sending
-		/// \todo if confirmed packet sending, g_rx_fin_result holds the result of the transmission
-		/**************************************************************/
-		/**************************************************************/
-		g_task_event_type &= N_LORA_TX_FIN;
-
-		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-
-		if (!g_rx_fin_result)
-		{
-			// Increase fail send counter
-			send_fail++;
-
-			if (send_fail == 10)
-			{
-				// Too many failed sendings, reset node and try to rejoin
-				delay(100);
-				sd_nvic_SystemReset();
-			}
-		}
-
-		// LoRa Join finished handling
-		if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
-		{
-			g_task_event_type &= N_LORA_JOIN_FIN;
-			if (g_join_result)
-			{
-				MYLOG("APP", "Successfully joined network");
-			}
-			else
-			{
-				MYLOG("APP", "Join network failed");
-				/// \todo here join could be restarted.
-				// lmh_join();
-			}
 		}
 	}
 }
