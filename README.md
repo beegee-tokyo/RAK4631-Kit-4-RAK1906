@@ -56,6 +56,26 @@ Using the AT command interface the WisBlock can be setup over the USB port.
 
 A detailed manual for the AT commands are in [AT-Commands.md](./AT-Commands.md)
 
+Here is an example for the typical AT commands required to get the device ready (EUI's and Keys are examples):
+```log
+// Setup AppEUI
+AT+APPEUI=70b3d57ed00201e1
+// Setup DevEUI
+AT+DEVEUI=ac1f09fffe03efdc
+// Setup AppKey
+AT+APPKEY=2b84e0b09b68e5cb42176fe753dcee79
+// Set automatic send frequency in seconds
+AT+SENDFREQ=60
+// Set data rate
+AT+DR=3
+// Set LoRaWAN region (here US915)
+AT+BAND=8
+// Reset node to save the new parameters
+ATZ
+// After reboot, start join request
+AT+JOIN=1,0,8,10
+```
+
 ## 3) Hardcoded LoRaWAN settings
 `void api_set_credentials(void);`
 This informs the API that hard coded LoRaWAN credentials will be used. If credentials are sent over USB or from My nRF Toolbox, the received credentials will be ignored. _**It is strongly suggest NOT TO USE hard coded credentials to avoid duplicate node definitions**_    
