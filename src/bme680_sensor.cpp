@@ -46,16 +46,6 @@ void bme680_get()
 	uint16_t humid_int = (uint16_t)(bme.humidity * 2);
 	uint16_t press_int = (uint16_t)(bme.pressure / 10);
 	uint16_t gasres_int = (uint16_t)(bme.gas_resistance / 10);
-	uint32_t batt = 0;
-	batt_s batt_level;
-
-	for (int i = 0; i < 10; i++)
-	{
-		batt += (uint16_t)(read_batt() / 10);
-	}
-	batt_level.batt16 = batt / 10;
-	g_env_data.batt_1 = batt_level.batt8[1];
-	g_env_data.batt_2 = batt_level.batt8[0];
 
 	g_env_data.humid_1 = (uint8_t)(humid_int);
 	g_env_data.temp_1 = (uint8_t)(temp_int >> 8);

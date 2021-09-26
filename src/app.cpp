@@ -25,6 +25,9 @@ uint8_t collected_data[64] = {0};
 /** Send Fail counter **/
 uint8_t send_fail = 0;
 
+/** Flag for low battery protection */
+bool low_batt_protection = false;
+
 /**
  * @brief Application specific setup functions
  * 
@@ -85,8 +88,36 @@ void app_event_handler(void)
 			restart_advertising(15);
 		}
 
-		// Get BME680 data
-		bme680_get();
+		if (!low_batt_protection)
+		{
+			// Get BME680 data
+			bme680_get();
+		}
+
+		// Get battery level
+		batt_s batt_level;
+
+		batt_level.batt16 = read_batt() / 10;
+		g_env_data.batt_1 = batt_level.batt8[1];
+		g_env_data.batt_2 = batt_level.batt8[0];
+
+		// Protection against battery drain
+		if (batt_level.batt16 < 290)
+		{
+			// Battery is very low, change send time to 1 hour to protect battery
+			low_batt_protection = true;						   // Set low_batt_protection active
+			g_task_wakeup_timer.setPeriod(1 * 60 * 60 * 1000); // Set send time to one hour
+			g_task_wakeup_timer.reset();
+			MYLOG("APP", "Battery protection activated");
+		}
+		else if ((batt_level.batt16 > 410) && low_batt_protection)
+		{
+			// Battery is higher than 4V, change send time back to original setting
+			low_batt_protection = false;
+			g_task_wakeup_timer.setPeriod(g_lorawan_settings.send_repeat_time);
+			g_task_wakeup_timer.reset();
+			MYLOG("APP", "Battery protection deactivated");
+		}
 
 		// Enqueue the packet
 		lmh_error_status result = send_lora_packet((uint8_t *)&g_env_data, ENV_DATA_LEN);
@@ -103,8 +134,6 @@ void app_event_handler(void)
 			MYLOG("APP", "Packet error, too big to send with current DR");
 			break;
 		}
-
-		MYLOG("APP", "LoRa package sent");
 	}
 }
 
