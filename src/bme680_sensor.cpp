@@ -4,14 +4,12 @@
  * @brief BME680 sensor functions
  * @version 0.1
  * @date 2021-05-29
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include <app.h>
-
-env_data_s g_env_data;
 
 /** BME680 */
 Adafruit_BME680 bme;
@@ -42,18 +40,17 @@ void bme680_get()
 {
 	bme.performReading();
 
+#if MY_DEBUG > 0
 	int16_t temp_int = (int16_t)(bme.temperature * 10.0);
 	uint16_t humid_int = (uint16_t)(bme.humidity * 2);
 	uint16_t press_int = (uint16_t)(bme.pressure / 10);
 	uint16_t gasres_int = (uint16_t)(bme.gas_resistance / 10);
+#endif
 
-	g_env_data.humid_1 = (uint8_t)(humid_int);
-	g_env_data.temp_1 = (uint8_t)(temp_int >> 8);
-	g_env_data.temp_2 = (uint8_t)(temp_int);
-	g_env_data.press_1 = (uint8_t)(press_int >> 8);
-	g_env_data.press_2 = (uint8_t)(press_int);
-	g_env_data.gas_1 = (uint8_t)(gasres_int >> 8);
-	g_env_data.gas_2 = (uint8_t)(gasres_int);
+	g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID_2, (float)bme.humidity);
+	g_solution_data.addTemperature(LPP_CHANNEL_TEMP_2, (float)bme.temperature);
+	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS_2, (float)(bme.pressure) / 100.0);
+	g_solution_data.addAnalogInput(LPP_CHANNEL_GAS_2, (float)(bme.gas_resistance) / 1000.0);
 
 	MYLOG("BME", "RH= %.2f T= %.2f", (float)(humid_int / 2.0), (float)(temp_int / 10.0));
 	MYLOG("BME", "P= %d R= %d", press_int * 10, gasres_int * 10);

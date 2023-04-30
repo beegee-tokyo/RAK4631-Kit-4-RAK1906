@@ -1,14 +1,14 @@
 /**
  * @file app.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
- * @brief Application specific functions. Mandatory to have init_app(), 
+ * @brief Application specific functions. Mandatory to have init_app(),
  *        app_event_handler(), ble_data_handler(), lora_data_handler()
  *        and lora_tx_finished()
  * @version 0.1
  * @date 2021-04-23
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include "app.h"
@@ -20,7 +20,7 @@ char g_ble_dev_name[10] = "RAK-ENV";
 uint32_t packet_counter = 0;
 
 /** Packet buffer for sending */
-uint8_t collected_data[64] = {0};
+WisCayenne g_solution_data(255);
 
 /** Send Fail counter **/
 uint8_t send_fail = 0;
@@ -30,7 +30,7 @@ bool low_batt_protection = false;
 
 /**
  * @brief Application specific setup functions
- * 
+ *
  */
 void setup_app(void)
 {
@@ -47,12 +47,15 @@ void setup_app(void)
 
 /**
  * @brief Application specific initializations
- * 
+ *
  * @return true Initialization success
  * @return false Initialization failure
  */
 bool init_app(void)
 {
+	// Reset the packet
+	g_solution_data.reset();
+
 	// Add your application specific initialization here
 	if (!init_bme680())
 	{
@@ -88,6 +91,9 @@ void app_event_handler(void)
 			restart_advertising(15);
 		}
 
+		// Reset the packet
+		g_solution_data.reset();
+
 		if (!low_batt_protection)
 		{
 			// Get BME680 data
@@ -95,21 +101,18 @@ void app_event_handler(void)
 		}
 
 		// Get battery level
-		batt_s batt_level;
-
-		batt_level.batt16 = read_batt() / 10;
-		g_env_data.batt_1 = batt_level.batt8[1];
-		g_env_data.batt_2 = batt_level.batt8[0];
+		float batt_level_f = read_batt();
+		g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
 
 		// Protection against battery drain
-		if (batt_level.batt16 < 290)
+		if (batt_level_f < 2900)
 		{
 			// Battery is very low, change send time to 1 hour to protect battery
-			low_batt_protection = true;						   // Set low_batt_protection active
+			low_batt_protection = true; // Set low_batt_protection active
 			api_timer_restart(1 * 60 * 60 * 1000);
 			MYLOG("APP", "Battery protection activated");
 		}
-		else if ((batt_level.batt16 > 410) && low_batt_protection)
+		else if ((batt_level_f > 4100) && low_batt_protection)
 		{
 			// Battery is higher than 4V, change send time back to original setting
 			low_batt_protection = false;
@@ -117,27 +120,46 @@ void app_event_handler(void)
 			MYLOG("APP", "Battery protection deactivated");
 		}
 
-		// Enqueue the packet
-		lmh_error_status result = send_lora_packet((uint8_t *)&g_env_data, ENV_DATA_LEN);
-		switch (result)
+		if (g_lorawan_settings.lorawan_enable)
 		{
-		case LMH_SUCCESS:
-			MYLOG("APP", "Packet enqueued");
-			packet_counter++;
-			break;
-		case LMH_BUSY:
-			MYLOG("APP", "LoRa transceiver is busy");
-			break;
-		case LMH_ERROR:
-			MYLOG("APP", "Packet error, too big to send with current DR");
-			break;
+			// Enqueue the packet
+			lmh_error_status result = send_lora_packet(g_solution_data.getBuffer(), g_solution_data.getSize());
+			switch (result)
+			{
+			case LMH_SUCCESS:
+				MYLOG("APP", "Packet enqueued");
+				packet_counter++;
+				break;
+			case LMH_BUSY:
+				MYLOG("APP", "LoRa transceiver is busy");
+				break;
+			case LMH_ERROR:
+				MYLOG("APP", "Packet error, too big to send with current DR");
+				break;
+			}
+		}
+		else
+		{
+			uint8_t packet_buffer[g_solution_data.getSize() + 8];
+			memcpy(packet_buffer, g_lorawan_settings.node_device_eui, 8);
+			memcpy(&packet_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
+
+			// Send packet over LoRa
+			if (send_p2p_packet(packet_buffer, g_solution_data.getSize() + 8))
+			{
+				MYLOG("APP", "P2P packet enqueued");
+			}
+			else
+			{
+				MYLOG("APP", "P2P packet too big");
+			}
 		}
 	}
 }
 
 /**
  * @brief Handle BLE UART data
- * 
+ *
  */
 void ble_data_handler(void)
 {
@@ -164,7 +186,7 @@ void ble_data_handler(void)
 
 /**
  * @brief Handle received LoRa Data
- * 
+ *
  */
 void lora_data_handler(void)
 {

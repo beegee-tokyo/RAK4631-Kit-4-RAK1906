@@ -16,7 +16,7 @@ This example is using my [WisBlock API](https://github.com/beegee-tokyo/WisBlock
 
 # Hardware used
 - [RAK4631](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview/) WisBlock Core module
-- [RAK5005-O](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5005-O/Overview/) WisBlock Base board
+- [RAK19007](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19007/Overview/) WisBlock Base board
 - [RAK1906](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/) WisBlock Sensor environment module
 
 ## _REMARK_
@@ -33,7 +33,7 @@ The MCU and LoRa transceiver go into sleep mode between measurement cycles to sa
 - [Patch to use RAK4631 with PlatformIO](https://github.com/RAKWireless/WisBlock/blob/master/PlatformIO/RAK4630/README.md)
 - [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)
 - [Adafruit BME680 Library](https://platformio.org/lib/show/1922/Adafruit%20BME680%20Library)
-- [WisBlock-API](https://platformio.org/lib/show/12807/WisBlock-API)
+- [WisBlock-API-V](https://platformio.org/lib/show/12807/WisBlock-API-V2)
 
 ## _REMARK_
 The libraries are all listed in the **`platformio.ini`** and are automatically installed when the project is compiled.
@@ -61,7 +61,7 @@ The device is advertising over BLE only the first 30 seconds after power up and 
 ## 2) Setup over USB port
 Using the AT command interface the WisBlock can be setup over the USB port.
 
-A detailed manual for the AT commands are in [AT-Commands.md](./AT-Commands.md)
+A detailed manual for the AT commands are in the [AT-Command-Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/)  ↗️
 
 Here is an example for the typical AT commands required to get the device ready (EUI's and Keys are examples):
 ```log
@@ -71,12 +71,12 @@ AT+APPEUI=70b3d57ed00201e1
 AT+DEVEUI=ac1f09fffe03efdc
 // Setup AppKey
 AT+APPKEY=2b84e0b09b68e5cb42176fe753dcee79
-// Set automatic send frequency in seconds
-AT+SENDFREQ=60
+// Set automatic send interval in seconds
+AT+SENDINT=60
 // Set data rate
 AT+DR=3
 // Set LoRaWAN region (here US915)
-AT+BAND=8
+AT+BAND=5
 // Reset node to save the new parameters
 ATZ
 // After reboot, start join request
