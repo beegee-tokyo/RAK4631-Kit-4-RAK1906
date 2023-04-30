@@ -33,7 +33,7 @@ The MCU and LoRa transceiver go into sleep mode between measurement cycles to sa
 - [Patch to use RAK4631 with PlatformIO](https://github.com/RAKWireless/WisBlock/blob/master/PlatformIO/RAK4630/README.md)
 - [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)
 - [Adafruit BME680 Library](https://platformio.org/lib/show/1922/Adafruit%20BME680%20Library)
-- [WisBlock-API-V](https://platformio.org/lib/show/12807/WisBlock-API-V2)
+- [WisBlock-API-V2](https://platformio.org/lib/show/12807/WisBlock-API-V2)
 
 ## _REMARK_
 The libraries are all listed in the **`platformio.ini`** and are automatically installed when the project is compiled.
@@ -82,6 +82,9 @@ ATZ
 // After reboot, start join request
 AT+JOIN=1,0,8,10
 ```
+
+## _REMARK_
+The AT command format used here is _**NOT**_ compatible with the RAK5205/RAK7205 AT commands.
 
 ## 3) Hardcoded LoRaWAN settings
 `void api_read_credentials(void);`    

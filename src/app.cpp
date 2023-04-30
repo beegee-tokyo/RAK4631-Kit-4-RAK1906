@@ -16,9 +16,6 @@
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-ENV";
 
-/** Just for the example we add the number of packets to each LoRaWAN packet */
-uint32_t packet_counter = 0;
-
 /** Packet buffer for sending */
 WisCayenne g_solution_data(255);
 
@@ -128,7 +125,6 @@ void app_event_handler(void)
 			{
 			case LMH_SUCCESS:
 				MYLOG("APP", "Packet enqueued");
-				packet_counter++;
 				break;
 			case LMH_BUSY:
 				MYLOG("APP", "LoRa transceiver is busy");
