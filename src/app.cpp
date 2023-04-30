@@ -40,6 +40,26 @@ void setup_app(void)
 	/**************************************************************/
 	/**************************************************************/
 	g_enable_ble = true;
+
+#if API_DEBUG == 0
+	// Initialize Serial for debug output
+	Serial.begin(115200);
+
+	time_t serial_timeout = millis();
+	// On nRF52840 the USB serial is not available immediately
+	while (!Serial)
+	{
+		if ((millis() - serial_timeout) < 5000)
+		{
+			delay(100);
+			digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
+		}
+		else
+		{
+			break;
+		}
+	}
+#endif
 }
 
 /**
@@ -209,7 +229,7 @@ void lora_data_handler(void)
 			{
 				// Too many failed sendings, reset node and try to rejoin
 				delay(100);
-				sd_nvic_SystemReset();
+				api_reset();
 			}
 		}
 	}
