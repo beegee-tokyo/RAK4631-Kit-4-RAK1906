@@ -167,7 +167,7 @@ extra_scripts = pre:rename.py
 # Payload decoder for Chirpstack and TTN    
 
 The payload is encoded in the same format as the RAKwireless WisNode devices.
-A payload decoder for Chirpstack and TTN can be found in the [RAKwireless Payload Decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder) Github repo.
+A payload decoder for Chirpstack, TTN and Datacake can be found in the [RAKwireless Payload Decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder) Github repo.
 
 # Visualization on DataCake
 
