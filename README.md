@@ -61,7 +61,7 @@ The device is advertising over BLE only the first 30 seconds after power up and 
 ## 2) Setup over USB port
 Using the AT command interface the WisBlock can be setup over the USB port.
 
-A detailed manual for the AT commands are in the [AT-Command-Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/)  ↗️
+A detailed manual for the AT commands are in the [AT-Command-Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual)  ↗️
 
 Here is an example for the typical AT commands required to get the device ready (EUI's and Keys are examples):
 ```log
@@ -167,7 +167,7 @@ extra_scripts = pre:rename.py
 # Payload decoder for Chirpstack and TTN    
 
 The payload is encoded in the same format as the RAKwireless WisNode devices.
-A payload decoder for Chirpstack, TTN and Datacake can be found in the [RAKwireless Payload Decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder) Github repo.
+A payload decoder for Chirpstack, TTN and Datacake can be found in the [RAKwireless_Standardized_Payload](https://github.com/RAKWireless/RAKwireless_Standardized_Payload) Github repo.
 
 # Visualization on DataCake
 
